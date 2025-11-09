@@ -47,9 +47,9 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
-        // top rated partener 
-        app.get('/partners', async (req, res) => {
-            const cursor = partnerCollection.find()
+        // top rated partener
+        app.get('/topPartners', async (req, res) => {
+            const cursor = partnerCollection.find().sort({ rating: -1 }).limit(3)
             const result = await cursor.toArray()
             res.send(result)
         })
