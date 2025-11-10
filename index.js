@@ -105,6 +105,20 @@ async function run() {
             res.send(result);
         });
 
+        // ====== edit /update connection ===
+        ///update product use patch
+        app.patch('/connections/:id', async (req, res) => {
+            const id = req.params.id
+            const updatePartner = req.body;
+            const query = { _id: new ObjectId(id) }
+            const update = {
+                $set: updatePartner
+            }
+            const result = await productsCollection.updateOne(query, update)
+            res.send(result)
+        })
+
+
 
 
 
