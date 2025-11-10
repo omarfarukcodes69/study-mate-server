@@ -3,7 +3,7 @@ const cors = require('cors')
 require('dotenv').config()
 const app = express();
 const port = process.env.PORT || 3000;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 // ======url =======
 // const uri = "mongodb+srv://<db_username>:<db_password>@cluster0.zfo7i3z.mongodb.net/?appName=Cluster0";
@@ -33,18 +33,13 @@ async function run() {
         await client.connect();
         const StudyMateDB = client.db('Study_Mate');
         const partnerCollection = StudyMateDB.collection('partners');
+        const connectionsCollection = StudyMateDB.collection('connections');
 
         // database related api here
         app.post('/partners', async (req, res) => {
             const newPartner = req.body
             console.log('partener info', newPartner)
             const result = await partnerCollection.insertOne(newPartner)
-            res.send(result)
-
-        })
-        app.get('/partners', async (req, res) => {
-            const cursor = partnerCollection.find()
-            const result = await cursor.toArray()
             res.send(result)
         })
         // top rated partener
@@ -53,6 +48,66 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
+        // === post data  in email ====
+        app.get('/partners', async (req, res) => {
+            console.log(req.query)
+            const email = req.query.email
+            const query = {}
+            if (email) {
+                query.email = email
+            }
+            const cursor = partnerCollection.find(query);
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+        ////==== find one /search/ partner ====
+        app.get('/partner/:id', async (req, res) => {
+            const id = req.params.id
+            const query = { _id: new ObjectId(id) }
+            const result = await partnerCollection.findOne(query)
+            res.send(result)
+        })
+        //==== connections batabase ===
+        // get connection
+        app.get('/my-connections', async (req, res) => {
+            const email = req.query.email;
+            if (!email) {
+                return res.status(400).send({ success: false, message: "Email is required" });
+            }
+            const query = { userEmail: email };
+            const result = await connectionsCollection.find(query).toArray();
+            res.send(result);
+        });
+
+        //// find product bids
+        app.get('/connections/:partnerId', async (req, res) => {
+            const partnerId = req.params.partnerId
+            console.log(partnerId)
+            const query = {
+                partner: partnerId
+            }
+            const cursor = connectionsCollection.find(query).sort({ bid_price: -1 })
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+        // ===== connection data post ===
+        app.post('/connections/sent-request', async (req, res) => {
+            const requestData = req.body;
+            const result = await connectionsCollection.insertOne(requestData);
+            res.send(result)
+        })
+
+        /// delete Partner
+        app.delete('/connections/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await connectionsCollection.deleteOne(query);
+            res.send(result);
+        });
+
+
+
+
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
