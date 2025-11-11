@@ -60,6 +60,15 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
+        /// update partnerCount with Patch
+        app.patch('/partners/:id', async (req, res) => {
+            const id = req.params.id
+            const { patnerCount } = req.body
+            const query = { _id: new ObjectId(id) };
+            const update = { $set: { patnerCount } };
+            const result = await partnerCollection.updateOne(query, update);
+            res.send(result);
+        })
         ////==== find one /search/ partner ====
         app.get('/partner/:id', async (req, res) => {
             const id = req.params.id
@@ -106,14 +115,14 @@ async function run() {
         });
 
         // ====== edit /update connection ===
-          app.patch('/connections/:id', async (req, res) => {
-                const id = req.params.id;
-                const updatePartner = req.body;
-                const query = { _id: new ObjectId(id) };
-                const update = { $set: updatePartner };
-                const result = await connectionsCollection.updateOne(query, update);
-                res.send(result);
-            });
+        app.patch('/connections/:id', async (req, res) => {
+            const id = req.params.id;
+            const updatePartner = req.body;
+            const query = { _id: new ObjectId(id) };
+            const update = { $set: updatePartner };
+            const result = await connectionsCollection.updateOne(query, update);
+            res.send(result);
+        });
 
 
 
