@@ -88,6 +88,26 @@ async function run() {
             res.send(result);
         });
 
+        // check if user already sent request to a partner
+        app.get('/connections/check-request', async (req, res) => {
+            const { userEmail, partnerId } = req.query;
+            if (!userEmail || !partnerId) {
+                return res.status(400).send({ success: false, message: "userEmail and partnerId are required" });
+            }
+
+            try {
+                const query = { userEmail, partnerId };
+                const existingRequest = await connectionsCollection.findOne(query);
+                if (existingRequest) {
+                    return res.send({ exists: true });
+                } else {
+                    return res.send({ exists: false });
+                }
+            } catch (error) {
+                console.error(error);
+                res.status(500).send({ success: false, message: "Server error" });
+            }
+        });
         //// find product bids
         app.get('/connections/:partnerId', async (req, res) => {
             const partnerId = req.params.partnerId
@@ -99,6 +119,29 @@ async function run() {
             const result = await cursor.toArray()
             res.send(result)
         })
+        // =====  Check partner if user already sent request =====
+        app.get('/connections/sent-request', async (req, res) => {
+            const { userEmail, partnerId } = req.query;
+
+            if (!userEmail || !partnerId) {
+                return res.status(400).send({ success: false, message: "userEmail and partnerId are required" });
+            }
+
+            try {
+                const query = { userEmail, partnerId };
+                const existingRequest = await connectionsCollection.findOne(query);
+
+                if (existingRequest) {
+                    return res.send({ exists: true });
+                } else {
+                    return res.send({ exists: false });
+                }
+            } catch (error) {
+                console.error(error);
+                res.status(500).send({ success: false, message: "Server error" });
+            }
+        });
+
         // ===== connection data post ===
         app.post('/connections/sent-request', async (req, res) => {
             const requestData = req.body;
